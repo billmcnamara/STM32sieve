@@ -1,0 +1,4 @@
+../Core/Src/sieve.c:7:6:sieveofe	7
+../Core/Src/sieve.c:40:6:simpleSieve	4
+../Core/Src/sieve.c:50:6:segmentedSieve	15
+../Core/Src/sieve.c:109:6:π	1
