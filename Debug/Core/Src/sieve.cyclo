@@ -1,4 +1,12 @@
-../Core/Src/sieve.c:7:6:sieveofe	7
-../Core/Src/sieve.c:40:6:simpleSieve	4
-../Core/Src/sieve.c:50:6:segmentedSieve	15
-../Core/Src/sieve.c:109:6:π	1
+../Core/Src/sieve.c:29:6:draw_axis	3
+../Core/Src/sieve.c:41:6:draw_axis_text	1
+../Core/Src/sieve.c:64:10:find_lower_log10_limit_x	2
+../Core/Src/sieve.c:71:10:find_lower_log10_limit_y	2
+../Core/Src/sieve.c:78:10:find_upper_log10_limit_x	2
+../Core/Src/sieve.c:85:10:find_upper_log10_limit_y	2
+../Core/Src/sieve.c:93:10:map_to_color	3
+../Core/Src/sieve.c:104:6:draw_scaled_pixel	11
+../Core/Src/sieve.c:204:6:sieveofe	7
+../Core/Src/sieve.c:230:6:simpleSieve	4
+../Core/Src/sieve.c:240:6:segmentedSieve	15
+../Core/Src/sieve.c:297:6:π	1

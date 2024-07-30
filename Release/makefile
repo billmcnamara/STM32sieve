@@ -34,34 +34,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := sieve
+BUILD_ARTIFACT_NAME := STM32sieve
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-sieve.elf \
+STM32sieve.elf \
 
 MAP_FILES += \
-sieve.map \
+STM32sieve.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-sieve.list \
+STM32sieve.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: sieve.elf secondary-outputs
+main-build: STM32sieve.elf secondary-outputs
 
 # Tool invocations
-sieve.elf sieve.map: $(OBJS) $(USER_OBJS) C:\Users\mcnamarw\STM32CubeIDE\workspace_1.15.1\sieve\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "sieve.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\mcnamarw\STM32CubeIDE\workspace_1.15.1\sieve\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="sieve.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+STM32sieve.elf STM32sieve.map: $(OBJS) $(USER_OBJS) C:\Users\mcnamarw\STM32CubeIDE\workspace_1.15.1\STM32sieve\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "STM32sieve.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\mcnamarw\STM32CubeIDE\workspace_1.15.1\STM32sieve\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32sieve.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -70,14 +70,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-sieve.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "sieve.list"
+STM32sieve.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "STM32sieve.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) default.size.stdout sieve.elf sieve.list sieve.map
+	-$(RM) STM32sieve.elf STM32sieve.list STM32sieve.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)

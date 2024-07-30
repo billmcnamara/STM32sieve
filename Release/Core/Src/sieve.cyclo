@@ -1,0 +1,10 @@
+../Core/Src/sieve.c:25:6:draw_axis	3
+../Core/Src/sieve.c:36:6:draw_axis_text	1
+../Core/Src/sieve.c:60:10:find_upper_log10_limit_x	2
+../Core/Src/sieve.c:69:10:find_upper_log10_limit_y	1
+../Core/Src/sieve.c:78:10:map_to_color	2
+../Core/Src/sieve.c:89:6:draw_scaled_pixel	7
+../Core/Src/sieve.c:157:6:sieveofe	7
+../Core/Src/sieve.c:190:6:simpleSieve	4
+../Core/Src/sieve.c:200:6:segmentedSieve	13
+../Core/Src/sieve.c:261:6:π	1

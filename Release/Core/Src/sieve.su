@@ -1,0 +1,10 @@
+../Core/Src/sieve.c:25:6:draw_axis	8	static
+../Core/Src/sieve.c:36:6:draw_axis_text	72	static
+../Core/Src/sieve.c:60:10:find_upper_log10_limit_x	8	static
+../Core/Src/sieve.c:69:10:find_upper_log10_limit_y	0	static
+../Core/Src/sieve.c:78:10:map_to_color	16	static
+../Core/Src/sieve.c:89:6:draw_scaled_pixel	64	static
+../Core/Src/sieve.c:157:6:sieveofe	40032	dynamic,bounded
+../Core/Src/sieve.c:190:6:simpleSieve	12	static
+../Core/Src/sieve.c:200:6:segmentedSieve	64	static
+../Core/Src/sieve.c:261:6:π	8	static
