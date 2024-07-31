@@ -134,17 +134,20 @@ int main(void)
 
   ST7735_Init();
   ST7735_FillScreen(ST7735_BLACK);
-
-
-
+/*
+ *
+ *
+ * call the prime count funtion up to integer value x
+ *
+ *
+ *
+ */
 
   int millis1 = HAL_GetTick();
-  π(1000000000);
+  π(9900000);
   int millis2 = HAL_GetTick();
   int timeInMillis=millis2 - millis1;
   convertTime(timeInMillis);
-  // printf("time: %d\n\r: ", timeToRun);
-
   //HAL_Delay(5000);
 
 
