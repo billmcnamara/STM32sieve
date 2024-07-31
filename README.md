@@ -39,4 +39,9 @@ For Pinouts to the TFT see:
 rescaling and graph reset complete via a single line approximation.
 Tested slightly beyond x = 10^9
 
-Room for improvement: change int to unsigned int and continue for ever...
+Room for improvement:
+
+  o change int to unsigned int and continue for ever...
+
+  o currently maximum x is 779079743
+  
