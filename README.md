@@ -5,7 +5,16 @@
 
 default setting in [Core\Src\main.c](Core\Inc\st7735.h)
 
-    π(99000000);
+
+The following calculations are perfomed in the main.c
+
+Expected output is shown:
+
+    π(123456);        //     11601
+    π(1234567);       //     95360
+    π(12345678);      //    809227
+    π(123456789);     //   7027260
+    π(234567890);     //  12879447
 
 
 #### ST7735 display
@@ -27,4 +36,7 @@ For Pinouts to the TFT see:
 ![Wiring to Nucleo](Img/wiring2.jpeg?raw=true "Nucleo-F411RE")
 
 #### Notes
-rescaling and graph reset is still a (when I have time) WIP, tested only up to x = 10^7
+rescaling and graph reset complete via a single line approximation.
+Tested slightly beyond x = 10^9
+
+Room for improvement: change int to unsigned int and continue for ever...

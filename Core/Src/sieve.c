@@ -11,6 +11,9 @@
 #include "testimg.h"
 #include <inttypes.h>
 
+
+bool debug_on = false;
+
 // The font used
 int FONT_WIDTH = 7;
 int FONT_HEIGHT = 10;
@@ -27,6 +30,8 @@ static int int_last_log_y = 1;
 // Count of primes
 static int uptoval = 0;
 static int count = 0;
+
+bool print_after_reset_scale = false;
 
 void draw_axis() {
 	// Note that the typical screen coordinate system starts from the top-left corner (0, 0).
@@ -69,13 +74,14 @@ void draw_axis_text() {
 }
 
 void draw_line(int display_x, int display_y, uint16_t color) {
+	//RED
     int plotx, ploty;
     int dx = abs(display_x);
     int dy = abs(display_y);
     int sx = display_x >= 0 ? 1 : -1;
     int sy = display_y >= 0 ? 1 : -1;
     int err = dx - dy;
-
+    // this all depends on the orientation.....
     plotx = 0; // Start point x
     ploty = 0; // Start point y
 
@@ -100,11 +106,17 @@ void draw_line(int display_x, int display_y, uint16_t color) {
 
 void draw_line_simple_y(int display_x, int display_y, uint16_t color) {
     float slope = (float)display_x / (float)display_y;
+
     int linex, liney;
 
     for (liney = 0; liney <= display_y; liney++) {
-    	linex = (int)(slope * liney); // Calculate x based on the inverse slope and current y
-        ST7735_DrawPixel(linex, ST7735_HEIGHT - 1 - liney, color); // Invert y-axis for the display
+        linex = (int)(slope * liney); // Calculate x based on the current y
+        int displayLiney = ST7735_HEIGHT - 1 - liney; // Invert the y-axis for the display
+
+        // Plot pixel ensuring it stays within display boundaries
+        if (linex >= 0 && linex < ST7735_WIDTH && displayLiney >= 0 && displayLiney < ST7735_HEIGHT) {
+            ST7735_DrawPixel(linex, displayLiney, color); // Draw pixel at calculated position
+        }
     }
 }
 
@@ -141,15 +153,6 @@ void draw_scaled_pixel(int x, int y) {
     int x_max = find_upper_log10_limit(x);
     int y_min = find_lower_log10_limit(y);
     int y_max = find_upper_log10_limit(y);
-    double log_x_min = log10(x_min);
-    double log_x_max = log10(x_max);
-    double log_y_min = log10(y_min);
-    double log_y_max = log10(y_max);
-
-    // Determine color based on logarithm of x
-    double max_log_x = (x_max > 0) ? log10(x_max) : 0.0;
-    double normalized_log_x = (x_max > 0) ? log_x / max_log_x : 0.0;
-    uint16_t color = map_to_color((float)normalized_log_x);
 
     // Check if the integer parts of the log values have changed, indicating a factor of 10 change
     bool reset_scale = false;
@@ -158,13 +161,13 @@ void draw_scaled_pixel(int x, int y) {
     int_log_x = (int)floor(log_x);
     int_log_y = (int)floor(log_y);
 
-	// Calculate the range of the x and y data
-    double scaleX = (ST7735_WIDTH - 1) / (log_x_max - log_x_min);
-    double scaleY = (ST7735_HEIGHT - 1) / (log_y_max - log_y_min);
     // Check for a factor of 10 change
     if ( fabs(int_log_x - int_last_log_x ) >= 1) {
         reset_scale = true;
-        printf("scale x %d, previously %d\n\r", int_log_x, int_last_log_x);
+        print_after_reset_scale = true;
+        if (debug_on) {
+        	printf("scale x %d, previously %d\n\r", int_log_x, int_last_log_x);
+        }
         x_min = find_lower_log10_limit(x);
         x_max = find_upper_log10_limit(x);
         last_log_x = log_x;
@@ -173,33 +176,61 @@ void draw_scaled_pixel(int x, int y) {
 
     if ( fabs(int_log_y - int_last_log_y ) >= 1) {
         reset_scale = true;
-        printf("scale y %d, previously %d \n\r", int_log_y, int_last_log_y);
+        print_after_reset_scale = true;
+        if (debug_on) {
+        	printf("scale y %d, previously %d \n\r", int_log_y, int_last_log_y);
+        }
         y_min = find_lower_log10_limit(y);
         y_max = find_upper_log10_limit(y);
         last_log_y = log_y;
         int_last_log_y = int_log_y;
     }
 
+    double log_x_min = log10(x_min);
+    double log_x_max = log10(x_max);
+    double log_y_min = log10(y_min);
+    double log_y_max = log10(y_max);
+
+	// Calculate the range of the x and y data
+    double scaleX = (ST7735_WIDTH - 1) / (log_x_max - log_x_min);
+    double scaleY = (ST7735_HEIGHT - 1) / (log_y_max - log_y_min);
+
+
+    // Determine color based on logarithm of x
+    double max_log_x = (x_max > 0) ? log10(x_max) : 0.0;
+    double normalized_log_x = (x_max > 0) ? log_x / max_log_x : 0.0;
+    uint16_t color = map_to_color((float)normalized_log_x);
+
     // Calculate the display coordinates
 	// Note that the typical screen coordinate system starts from the top-left corner (0, 0).
     // The x-axis increases to the right, and the y-axis increases downward.
     // graphing logic expects a traditional Cartesian plane, you might need to flip the y-axis values.
     int display_x = (int)((log10(x) - log_x_min) * scaleX);
-    int display_y = ST7735_HEIGHT - (int)((log10(y) - log_y_min) * scaleY);
+    int display_y = (int)((log10(y) - log_y_min) * scaleY);
 
     if (reset_scale) {
         ST7735_FillScreen(ST7735_BLACK);
         draw_axis();
         draw_axis_text();
-        // when resetting the scale, draw a simple line up to the new x,y
-        printf("drawing line up to: (%d,%d)\n\r", display_x - 1, display_y - 1 );
-        draw_line(display_x - 1, display_y - 1, color);
     } else {
-        ST7735_DrawPixel(display_x, display_y, color);
+    	if (print_after_reset_scale) {
+            // when resetting the scale, draw a simple line up to the new x,y
+    		if (debug_on) {
+    			printf("drawing line up to: (%d,%d)\n\r", display_x, display_y );
+    		}
+            draw_line(display_x, display_y, ST7735_RED);
+            // draw_line_simple_y(display_x, display_y, ST7735_GREEN);
+            if (debug_on) {
+            	printf("drawing point at: (%d,%d)\n\r", display_x, display_y );
+            }
+    		print_after_reset_scale = false;
+    	}
+        ST7735_DrawPixel(display_x, ST7735_HEIGHT - display_y, color);
     }
 
-    // debug
-    printf("x,y: (%d, %d) | log: (%d, %d) | display: (%d,%d)\n\r", x, y, int_log_x, int_log_y, display_x, display_y);
+    if (debug_on) {
+     printf("x,y: (%d, %d) | log: (%d, %d) | display: (%d,%d)\n\r", x, y, int_log_x, int_log_y, display_x, display_y);
+    }
 
     // info box
     char count_x_string[16];
@@ -216,7 +247,9 @@ void draw_scaled_pixel(int x, int y) {
 
 void sieveofe(int c)
 {
-	printf("%d \n\r", c);
+	if (debug_on) {
+		printf("%d \n\r", c);
+	}
 	//int n;
 	int n = 20;
 	int prime[n+1];
@@ -268,7 +301,7 @@ void segmentedSieve(int n) {
 
     // Array to mark non-primes in the current segment
     bool* isPrime = malloc(segmentSize * sizeof(bool));
-
+    count = 0;
     // Process each segment
     for (int low = 1; low <= n; low += segmentSize) {
         int high = low + segmentSize;
@@ -310,19 +343,20 @@ void segmentedSieve(int n) {
 
     free(prime);
     free(isPrime);
-    printf("Total number of primes less than %d: %d\n\r", n, count);
+    printf("\n\rTotal number of primes less than %d: %d\n\r", n, count);
 }
 
 void π(int n) {
 	uptoval = n;
-    printf("\n\rup to %d\n\r", uptoval);
+	if (debug_on) {
+		printf("\n\rup to %d\n\r", uptoval);
+	}
 
     // reset TFT
     ST7735_Init();
     ST7735_FillScreen(ST7735_BLACK);
     ST7735_DrawImage(0,0, ST7735_WIDTH, ST7735_HEIGHT,  (uint16_t*)test_img_128x128);
-
-    HAL_Delay(10000);
+    HAL_Delay(2000);
 
     draw_axis();
     HAL_Delay(1000);

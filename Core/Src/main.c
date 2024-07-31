@@ -142,9 +142,27 @@ int main(void)
  */
   //ST7735_DrawImage(0, 0, ST7735_WIDTH, ST7735_HEIGHT, (uint16_t*)test_img_128x128);
 
+  /* in comments below expected values.
+   * calculated values are output on screen and in console
+   */
+  π(123456);        //     11601
+  HAL_Delay(5000);
+  π(1234567);       //     95360
+  HAL_Delay(5000);
+  π(12345678);      //    809227
+  HAL_Delay(5000);
+  π(123456789);     //   7027260
+  HAL_Delay(5000);
 
   int millis1 = HAL_GetTick();
-  π(99000000);
+
+  π(234567890);     //  12879447
+  HAL_Delay(5000);
+  // π(1234567890)  //  62106578
+  // HAL_Delay(5000);
+  // π(10000000000) // 455052511
+  // HAL_Delay(5000);
+
   int millis2 = HAL_GetTick();
   int timeInMillis=millis2 - millis1;
   convertTime(timeInMillis);
