@@ -8,6 +8,7 @@
 #include "main.h"
 #include "st7735.h"
 #include "fonts.h"
+#include "testimg.h"
 #include <inttypes.h>
 
 // The font used
@@ -28,8 +29,9 @@ static int uptoval = 0;
 static int count = 0;
 
 void draw_axis() {
-	// warning the fonts are rotated differently to the orientation of the screen and the position of the 0,0
-	// therefore the x looks wrong..
+	// Note that the typical screen coordinate system starts from the top-left corner (0, 0).
+    // The x-axis increases to the right, and the y-axis increases downward.
+    // graphing logic expects a traditional Cartesian plane, you might need to flip the y-axis values.
     // the x
     for (int i = 0; i < ST7735_WIDTH; i++) {
         ST7735_DrawPixel(i, ST7735_HEIGHT - 1, ST7735_WHITE);
@@ -41,8 +43,9 @@ void draw_axis() {
 }
 
 void draw_axis_text() {
-	// warning the fonts are rotated differently to the orientation of the screen and the position of the 0,0
-	// therefore the y looks wrong..
+	// Note that the typical screen coordinate system starts from the top-left corner (0, 0).
+    // The x-axis increases to the right, and the y-axis increases downward.
+    // graphing logic expects a traditional Cartesian plane, you might need to flip the y-axis values.
     int OFFSET_FROM_0 = 3;
 
     // info box
@@ -63,6 +66,46 @@ void draw_axis_text() {
     ST7735_WriteString(OFFSET_FROM_0, draw_at_point_for_y, log_y_string, Font_7x10, ST7735_YELLOW, ST7735_BLACK);
 
     // printf("log: x:10^(%d) , y: 10^(%d)\n\r", int_log_x, int_log_y);
+}
+
+void draw_line(int display_x, int display_y, uint16_t color) {
+    int plotx, ploty;
+    int dx = abs(display_x);
+    int dy = abs(display_y);
+    int sx = display_x >= 0 ? 1 : -1;
+    int sy = display_y >= 0 ? 1 : -1;
+    int err = dx - dy;
+
+    plotx = 0; // Start point x
+    ploty = 0; // Start point y
+
+    while (1) {
+        // Plot the pixel at the current point
+        ST7735_DrawPixel(plotx, ST7735_HEIGHT - 1 - ploty, color); // Invert y-axis for the display
+
+        // Check if we've reached the endpoint
+        if (plotx == display_x && ploty == display_y) break;
+
+        int e2 = err * 2;
+        if (e2 > -dy) {
+            err -= dy;
+            plotx += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            ploty += sy;
+        }
+    }
+}
+
+void draw_line_simple_y(int display_x, int display_y, uint16_t color) {
+    float slope = (float)display_x / (float)display_y;
+    int linex, liney;
+
+    for (liney = 0; liney <= display_y; liney++) {
+    	linex = (int)(slope * liney); // Calculate x based on the inverse slope and current y
+        ST7735_DrawPixel(linex, ST7735_HEIGHT - 1 - liney, color); // Invert y-axis for the display
+    }
 }
 
 int find_lower_log10_limit(int current_v) {
@@ -98,16 +141,26 @@ void draw_scaled_pixel(int x, int y) {
     int x_max = find_upper_log10_limit(x);
     int y_min = find_lower_log10_limit(y);
     int y_max = find_upper_log10_limit(y);
-	// Calculate the range of the x and y data
-    int x_range = x_max ;// - x_min;
-    int y_range = y_max ;// - x_min;
-    // Update int_log_x and int_log_y for display purposes
-    int_log_x = (int)floor(log_x);
-    int_log_y = (int)floor(log_y);
+    double log_x_min = log10(x_min);
+    double log_x_max = log10(x_max);
+    double log_y_min = log10(y_min);
+    double log_y_max = log10(y_max);
+
+    // Determine color based on logarithm of x
+    double max_log_x = (x_max > 0) ? log10(x_max) : 0.0;
+    double normalized_log_x = (x_max > 0) ? log_x / max_log_x : 0.0;
+    uint16_t color = map_to_color((float)normalized_log_x);
 
     // Check if the integer parts of the log values have changed, indicating a factor of 10 change
     bool reset_scale = false;
 
+    // Update int_log_x and int_log_y for display purposes
+    int_log_x = (int)floor(log_x);
+    int_log_y = (int)floor(log_y);
+
+	// Calculate the range of the x and y data
+    double scaleX = (ST7735_WIDTH - 1) / (log_x_max - log_x_min);
+    double scaleY = (ST7735_HEIGHT - 1) / (log_y_max - log_y_min);
     // Check for a factor of 10 change
     if ( fabs(int_log_x - int_last_log_x ) >= 1) {
         reset_scale = true;
@@ -127,28 +180,28 @@ void draw_scaled_pixel(int x, int y) {
         int_last_log_y = int_log_y;
     }
 
+    // Calculate the display coordinates
+	// Note that the typical screen coordinate system starts from the top-left corner (0, 0).
+    // The x-axis increases to the right, and the y-axis increases downward.
+    // graphing logic expects a traditional Cartesian plane, you might need to flip the y-axis values.
+    int display_x = (int)((log10(x) - log_x_min) * scaleX);
+    int display_y = ST7735_HEIGHT - (int)((log10(y) - log_y_min) * scaleY);
+
     if (reset_scale) {
         ST7735_FillScreen(ST7735_BLACK);
         draw_axis();
         draw_axis_text();
+        // when resetting the scale, draw a simple line up to the new x,y
+        printf("drawing line up to: (%d,%d)\n\r", display_x - 1, display_y - 1 );
+        draw_line(display_x - 1, display_y - 1, color);
+    } else {
+        ST7735_DrawPixel(display_x, display_y, color);
     }
-
-    // Calculate the display coordinates
-	// warning the fonts are rotated differently to the orientation of the screen and the position of the 0,0
-    // therefore the y looks wrong..
-    int display_x = (((x - x_min) * (ST7735_WIDTH -1 )) / x_range);
-    int display_y = ST7735_HEIGHT - (((y - y_min) * (ST7735_HEIGHT -1 )) / y_range);
-
-    // Determine color based on logarithm of x
-    double max_log_x = (x_max > 0) ? log10(x_max) : 0.0;
-    double normalized_log_x = (x_max > 0) ? log_x / max_log_x : 0.0;
-    uint16_t color = map_to_color((float)normalized_log_x);
 
     // debug
     printf("x,y: (%d, %d) | log: (%d, %d) | display: (%d,%d)\n\r", x, y, int_log_x, int_log_y, display_x, display_y);
 
     // info box
-    ST7735_DrawPixel(display_x, display_y, color);
     char count_x_string[16];
     snprintf(count_x_string, sizeof(count_x_string), "x %d", x);
     int draw_at_point_for_x = 30;
@@ -267,6 +320,10 @@ void π(int n) {
     // reset TFT
     ST7735_Init();
     ST7735_FillScreen(ST7735_BLACK);
+    ST7735_DrawImage(0,0, ST7735_WIDTH, ST7735_HEIGHT,  (uint16_t*)test_img_128x128);
+
+    HAL_Delay(10000);
+
     draw_axis();
     HAL_Delay(1000);
 

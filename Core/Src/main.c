@@ -130,8 +130,6 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
-
-
   ST7735_Init();
   ST7735_FillScreen(ST7735_BLACK);
 /*
@@ -142,14 +140,14 @@ int main(void)
  *
  *
  */
+  //ST7735_DrawImage(0, 0, ST7735_WIDTH, ST7735_HEIGHT, (uint16_t*)test_img_128x128);
+
 
   int millis1 = HAL_GetTick();
-  π(9900000);
+  π(99000000);
   int millis2 = HAL_GetTick();
   int timeInMillis=millis2 - millis1;
   convertTime(timeInMillis);
-  //HAL_Delay(5000);
-
 
   /* USER CODE END 2 */
 

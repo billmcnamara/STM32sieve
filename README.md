@@ -5,7 +5,7 @@
 
 default setting in [Core\Src\main.c](Core\Inc\st7735.h)
 
-    π(9900000); 
+    π(99000000);
 
 
 #### ST7735 display
