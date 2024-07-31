@@ -28,8 +28,9 @@ static int int_log_y = 1;
 static int int_last_log_y = 1;
 
 // Count of primes
-static int uptoval = 0;
-static int count = 0;
+int segmentSize = 100000;
+static long uptoval = 0;
+static long count = 0;
 
 bool print_after_reset_scale = false;
 
@@ -54,8 +55,8 @@ void draw_axis_text() {
     int OFFSET_FROM_0 = 3;
 
     // info box
-    char count_n_string[16];
-    snprintf(count_n_string, sizeof(count_n_string), "n %d", uptoval);
+    char count_n_string[32];
+    snprintf(count_n_string, sizeof(count_n_string), "n %ld", uptoval);
     int draw_at_point_for_n = 20;
     ST7735_WriteString(20, draw_at_point_for_n, count_n_string, Font_7x10, ST7735_RED, ST7735_BLACK);
 
@@ -233,12 +234,12 @@ void draw_scaled_pixel(int x, int y) {
     }
 
     // info box
-    char count_x_string[16];
+    char count_x_string[32];
     snprintf(count_x_string, sizeof(count_x_string), "x %d", x);
     int draw_at_point_for_x = 30;
     ST7735_WriteString(20, draw_at_point_for_x, count_x_string, Font_7x10, ST7735_WHITE, ST7735_BLACK);
 
-    char count_y_string[16];
+    char count_y_string[32];
     snprintf(count_y_string, sizeof(count_y_string), "y %d", y);
     int draw_at_point_for_y = draw_at_point_for_x + FONT_HEIGHT + 1;
     ST7735_WriteString(20, draw_at_point_for_y, count_y_string, Font_7x10, ST7735_GREEN, ST7735_BLACK);
@@ -280,45 +281,61 @@ void sieveofe(int c)
 	}
 }
 
-void simpleSieve(int limit, bool prime[]) {
-    for (int p = 2; p * p <= limit; p++) {
+void simpleSieve(long limit, bool* prime) {
+    for (long i = 0; i <=  limit; i++) prime[i] = true;
+    for (long p = 2; p * p <= limit; p++) {
         if (prime[p]) {
-            for (int i = p * p; i <= limit; i += p)
-                prime[i] = false;
+            for (long i = p * p; i <= limit; i += p) prime[i] = false;
         }
     }
 }
 
 // Segmented Sieve Algorithm
-void segmentedSieve(int n) {
-    int segmentSize = 100000; // Segment size
-    int sqrtN = (int)sqrt(n);
+void segmentedSieve(long n) {
+	if ( n > 700000000 ){
+		segmentSize = 10000;
+	}
+	if ( n > 7000000000 ){
+		segmentSize = 1000;
+	}
+    long sqrtN = (long)sqrt((double)n);
 
-    // Array to store primes up to sqrtN
-    bool* prime = malloc((sqrtN + 1) * sizeof(bool));
-    for (int i = 0; i <= sqrtN; i++) prime[i] = true;
+    // Allocate memory for the prime array up to sqrtN
+    bool* prime = (bool*)malloc((sqrtN + 1) * sizeof(bool));
+    if (!prime) {
+        fprintf(stderr, "\nsieve.c:306: Memory allocation failed\n\r");
+        return;
+    }
+
+    // Find all primes up to sqrtN
     simpleSieve(sqrtN, prime);
 
     // Array to mark non-primes in the current segment
-    bool* isPrime = malloc(segmentSize * sizeof(bool));
-    count = 0;
+    bool* isPrime = (bool*)malloc(segmentSize * sizeof(bool));
+    if (!isPrime) {
+        fprintf(stderr, "\nsieve.c:316: Memory allocation failed\n\r");
+        free(prime);
+        return;
+    }
+
+     count = 0;
     // Process each segment
-    for (int low = 1; low <= n; low += segmentSize) {
-        int high = low + segmentSize;
+    for (long low = 2; low <= n; low += segmentSize) {
+        long high = low + segmentSize;
         if (high > n + 1) high = n + 1;  // Adjust high for the last segment
 
         // Initialize the segment as all primes
-        for (int i = 0; i < segmentSize && low + i <= n; i++) {
+        for (long i = 0; i < segmentSize && low + i <= n; i++) {
             isPrime[i] = true;
         }
 
         // Mark non-primes in the current segment
-        for (int i = 2; i <= sqrtN; i++) {
+        for (long i = 2; i <= sqrtN; i++) {
             if (prime[i]) {
                 // Find the minimum number in the current segment that is a multiple of i
-                int loLim = fmax(i * i, (low + i - 1) / i * i);
+                long loLim = fmax(i * i, ((low + i - 1) / i) * i);
                 if (loLim >= high) continue;
-                for (int j = loLim; j < high; j += i) {
+                for (long j = loLim; j < high; j += i) {
                     if (j >= low) {
                         isPrime[j - low] = false;
                     }
@@ -327,8 +344,8 @@ void segmentedSieve(int n) {
         }
 
         // Count primes in the current segment
-        int segmentCount = 0;
-        for (int i = 0; i < segmentSize && low + i <= n; i++) {
+        long segmentCount = 0;
+        for (long i = 0; i < segmentSize && low + i <= n; i++) {
             if (isPrime[i] && (low + i) > 1) {  // Avoid counting 1 which is not a prime
                 segmentCount++;
                 count++;
@@ -336,20 +353,20 @@ void segmentedSieve(int n) {
         }
 
         // Print the segment range and total primes so far
-        //printf("%d,%d\n\r", high - 1, count);
+        //printf("%ld,%ld\n", high - 1, count);
         draw_axis_text();
         draw_scaled_pixel(high - 1, count);
     }
 
     free(prime);
     free(isPrime);
-    printf("\n\rTotal number of primes less than %d: %d\n\r", n, count);
+    printf("\nTotal number of primes less than %ld: %ld\n\r", n, count);
 }
 
-void π(int n) {
+void π(long n) {
 	uptoval = n;
 	if (debug_on) {
-		printf("\n\rup to %d\n\r", uptoval);
+		printf("\n\rup to %ld\n\r", uptoval);
 	}
 
     // reset TFT

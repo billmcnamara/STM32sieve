@@ -14,7 +14,7 @@ Expected output is shown:
     π(1234567);       //     95360
     π(12345678);      //    809227
     π(123456789);     //   7027260
-    π(234567890);     //  12879447
+    π(1234567890);    //  62106578
 
 
 #### ST7735 display
@@ -39,9 +39,8 @@ For Pinouts to the TFT see:
 rescaling and graph reset complete via a single line approximation.
 Tested slightly beyond x = 10^9
 
-Room for improvement:
+#### Room for improvement:
 
-  o change int to unsigned int and continue for ever...
+o change long to long long and continue for ever...
 
-  o currently maximum x is 779079743
-  
+  o currently π(10000000000); // 455052511 will cause overflow issues

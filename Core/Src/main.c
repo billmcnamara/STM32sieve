@@ -153,15 +153,15 @@ int main(void)
   HAL_Delay(5000);
   π(123456789);     //   7027260
   HAL_Delay(5000);
-
+  // π(779079743);       //  40124506  // sieve.c segment size change required here to avoid oom
   int millis1 = HAL_GetTick();
 
-  π(234567890);     //  12879447
+  π(1234567890);    //  62106578
+  
+  // rework required for long long ints.....
+  //π(10000000000); // 455052511
+
   HAL_Delay(5000);
-  // π(1234567890)  //  62106578
-  // HAL_Delay(5000);
-  // π(10000000000) // 455052511
-  // HAL_Delay(5000);
 
   int millis2 = HAL_GetTick();
   int timeInMillis=millis2 - millis1;
